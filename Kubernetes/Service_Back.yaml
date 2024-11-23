@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-node-app-service #Nom du service de l'application Backend Node
+  namespace: skander-pfe
+spec:
+  selector:
+    app: back-node-app
+  type: NodePort # type de service
+  ports:
+  - protocol: TCP
+    targetPort: 3000 # Le port exposé par le service
+    port: 3000 # Le port sur lequel le service s'exécute dans le cluster
+    nodePort: 32300 #Le port accessible depuis l'éxtérieur du cluster K8s

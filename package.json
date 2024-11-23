@@ -1,0 +1,30 @@
+{
+  "name": "e-learning-back",
+  "version": "1.0.0",
+  "publishConfig": {
+    "registry": "http://192.168.61.130:32323/repository/Back/"
+  },
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "sonar": "sonar-scanner"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "ejs": "^3.1.6",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^6.5.0",
+    "mongoose": "^6.0.12",
+    "mongose": "0.0.2-security",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.15",
+    "password-hash": "^1.2.2",
+    "sonar-scanner": "^3.1.0"
+  }
+}

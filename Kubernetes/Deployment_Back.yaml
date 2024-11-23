@@ -1,0 +1,39 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: back-node-app-deployment #Nom du déploiment de l'application Backend Node
+  namespace: skander-pfe
+  labels:
+    app: back-node-app
+spec:
+  replicas: 2 #Nombre de réplicas du déploiment
+  selector:
+    matchLabels:
+      app: back-node-app
+  template:
+    metadata:
+      labels:
+        app: back-node-app
+    spec:
+      containers:
+      - name: back-node-app # Nom du Conteneur
+        image: "skanderboussorra/back:latest" #l'image sur DockerHub
+        ports:
+          - containerPort: 3000 #Port exposé par le Conteneur
+        env:
+          - name: JWT_KEY
+            valueFrom:
+              configMapKeyRef:
+                name: node-app-config
+                key: JWT_KEY
+          - name: PORT
+            valueFrom:
+              configMapKeyRef:
+                name: node-app-config
+                key: PORT
+          - name: MONGO_URI
+            valueFrom:
+              configMapKeyRef:
+                name: node-app-config
+                key: MONGO_URI
+              

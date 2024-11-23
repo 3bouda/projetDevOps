@@ -1,0 +1,38 @@
+---
+- name: Deploy Back App on K8S
+  hosts: masters
+  become: yes
+  tasks:
+
+  #Delete Old Deployment and Service of back
+    - name: Delete old Deployment of Backend NodeJS from K8S
+      command: kubectl delete -n skander-pfe deployment back-node-app-deployment
+      become: yes
+      become_user: ubuntu 
+
+    - name: Delete old Service of Backend Nodejs On K8S
+      command: kubectl delete -n skander-pfe service back-node-app-service
+      become: yes
+      become_user: ubuntu 
+
+    - name: Delete Secret from K8S
+      command: kubectl delete -n skander-pfe secret mongodb-secret
+      become: yes
+      become_user: ubuntu 
+      
+#Create new Deployment and Service for back
+
+    - name: Apply Secret On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/mongo-secert.yaml
+      become: yes
+      become_user: ubuntu
+
+    - name: Create new Deployment for Backeend Node On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Deployment_Back.yaml
+      become: yes
+      become_user: ubuntu
+
+    - name: Create new Service for Backeend Node On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Service_Back.yaml
+      become: yes
+      become_user: ubuntu

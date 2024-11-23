@@ -1,0 +1,161 @@
+pipeline {
+    agent any
+    tools{
+        nodejs "nodejs"
+        dockerTool "docker"
+        ansible "ansible"
+    }
+    environment {
+        registry = 'skanderboussorra/back'    
+        registryCredential = 'docker'
+        dockerImage = ''
+    }
+
+    stages {
+        
+        /*stage ('GIT') {
+            steps {
+                echo "Getting Project from Git"; 
+                git credentialsId: 'GitHub_Token', url: 'https://github.com/SkanderBoussorra/PFE_BackProject.git'
+            }
+        }
+        */
+        stage ('Clean Cache') {
+            steps {
+                echo "Clean"; 
+                sh 'npm cache clean --force'; 
+            }
+        }
+
+
+        stage ('Install') {
+            steps {
+                echo "Install";
+                sh 'npm config set registry https://registry.npmjs.org/ '
+                sh 'npm install'; 
+            }
+        }
+        
+
+        stage('OWASP Dependency-Check Vulnerabilities') {
+           steps {
+               echo "Install";
+            dependencyCheck additionalArguments: ''' 
+                    -o './'
+                    -s './'
+                    -f 'ALL' 
+                    --prettyPrint''', odcInstallation: 'dependency-check'
+        
+        dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+        
+            }
+        } 
+        stage ('Quality Code with Sonarqube') {
+            steps {
+                echo "sonar"; 
+                sh 'npm run sonar'; 
+            }
+        }
+        
+        stage ('Upload To Nexus') {
+            steps {
+                echo "Upload Artifact to Nexus";
+                sh 'npm config set registry http://192.168.61.130:32323/repository/Back/'
+                sh 'npm publish'; 
+            }
+        }
+        
+        stage('Building Image Docker') {
+                    steps {
+                        script {
+                            dockerImage = docker.build registry + ":latest"
+                }
+            }
+        }
+        
+        stage('Deploy Image On DockerHub') { 
+            steps { 
+                sh 'curl https://download.docker.com/linux/static/stable/x86_64/docker-19.03.8.tgz | tar xvz --directory /tmp && mv -v /tmp/docker/docker /usr/local/bin/docker && chmod +x /usr/local/bin/docker && rm -rf /tmp/docker';    
+                script { 
+                    docker.withRegistry( '', registryCredential ) { 
+                        dockerImage.push('latest') 
+                    }
+                } 
+            }
+        }
+/*
+        stage('Deploy DB & Back App on K8S ') {
+            steps {
+            sshagent(['k8s']) {
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/ConfigmapNode.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/mongodb-shell.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Deployment_Back.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Service_Back.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Deployment_BD.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+                    sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Service_BD.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
+
+            script {
+
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/ConfigmapNode.yaml"
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/mongodb-shell.yaml"
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Deployment_Back.yaml"
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Service_Back.yaml"
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Deployment_BD.yaml"
+                    sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Service_BD.yaml"
+                    }
+                }
+            }
+        } 
+
+
+*/
+        stage ('Deploy DB & Back App on K8S with Ansible') {
+            steps {
+                echo "ansible install"; 
+                sh 'apt-get update'
+                sh 'apt install -y ansible';
+                sh 'ansible-playbook --version'; 
+                echo "ssh"; 
+                sh 'apt-get update && apt install -y sshpass'
+                sh "sshpass -p 'admin' scp -o StrictHostKeyChecking=no ./ansible/Playbook_BackK8s.yaml skander@192.168.61.130:/home/skander/ansible-app"
+                sh "sshpass -p 'admin' scp -o StrictHostKeyChecking=no ./ansible/Playbook_MongoDbK8s.yaml skander@192.168.61.130:/home/skander/ansible-app"
+                sh "sshpass -p 'admin' scp -o StrictHostKeyChecking=no ./ansible/hosts skander@192.168.61.130:/home/skander/ansible-app"
+                sshagent(['k8s']) {                    
+                    echo "Delete old files";
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/ConfigmapNode.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/mongo-secert.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/mongodb-shell.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/Deployment_Back.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/Service_Back.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/Deployment_BD.yaml"
+                sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Backend/Service_BD.yaml"
+                    
+                    echo "Add new files";
+                    
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/ConfigmapNode.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/mongo-secert.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/mongodb-shell.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Deployment_Back.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Service_Back.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Deployment_BD.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Service_BD.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app/Backend"
+                }
+                
+                sh "sshpass -p 'admin' ssh skander@192.168.61.130 ansible-playbook -i /home/skander/ansible-app/hosts /home/skander/ansible-app/Playbook_MongoDbK8s.yaml --extra-vars 'ansible_become_pass=admin'"
+                sh "sshpass -p 'admin' ssh skander@192.168.61.130 ansible-playbook -i /home/skander/ansible-app/hosts /home/skander/ansible-app/Playbook_BackK8s.yaml --extra-vars 'ansible_become_pass=admin'"
+            }
+        } 
+        
+    }
+        post ('Mail') {
+        always {
+            cleanWs()
+            mail bcc: '', body: '''Bonjour,
+
+Vous avez un Build!! N’oubliez pas de le vérifier!!
+
+Cordialement,
+Skander''', cc: '', from: '', replyTo: '', subject: '[PIPELINE BACK PFE SKANDER]', to: 'skander.boussorra@esprit.tn'
+        }
+    }
+}

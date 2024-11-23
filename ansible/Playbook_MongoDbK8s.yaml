@@ -1,0 +1,54 @@
+---
+- name: Deploy Back App on K8S
+  hosts: masters
+  become: yes
+  tasks:
+
+  #Delete Old Deployment and Service of database Mongo
+
+    - name: Delete old Deployment of database Mongo On K8S
+      command: kubectl delete -n skander-pfe deployment mongodb-deployment
+      become: yes
+      become_user: ubuntu 
+
+    - name: Delete old Service of database Mongo On K8S
+      command: kubectl delete -n skander-pfe service mongodb-service
+      become: yes
+      become_user: ubuntu 
+      
+    - name: Delete ConfigmapNode from K8S
+      command: kubectl delete -n skander-pfe configmap node-app-config
+      become: yes
+      become_user: ubuntu
+
+    
+  #Delete Old Shell Pod of Mongo
+
+    - name: Delete Old Shell Pod of Mongo On K8S
+      command: kubectl delete -n skander-pfe pod mongodb-shell
+      become: yes
+      become_user: ubuntu 
+
+  #Create new Deployment and Service for database Mongo
+
+    - name: Create new Deployment for database Mongo On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Deployment_BD.yaml
+      become: yes
+      become_user: ubuntu
+
+    - name: Apply ConfigmapNode On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/ConfigmapNode.yaml
+      become: yes
+      become_user: ubuntu
+
+    - name: Create new Service for database Mongo On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Service_BD.yaml
+      become: yes
+      become_user: ubuntu
+
+      #Create new Shell Pod of Mongo
+
+    - name: Create new Deployment for database Mongo On K8S
+      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/mongodb-shell.yaml
+      become: yes
+      become_user: ubuntu
