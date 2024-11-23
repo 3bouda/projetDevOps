@@ -1,0 +1,22 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: node-app-deployment #Nom du déploiment de l'application Backend Node
+  namespace: iheb
+  labels:
+    app: node-app
+spec:
+  replicas: 1 #Nombre de réplicas du déploiment
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+      - name: node-app # Nom du Conteneur
+        image: "3oudaaa/devops:latest" #l'image sur DockerHub
+        ports:
+          - containerPort: 3000 #Port exposé par le Conteneur
