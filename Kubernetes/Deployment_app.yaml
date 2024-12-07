@@ -1,7 +1,7 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: node-app-deployment #Nom du déploiment de l'application Backend Node
+  name: node-app-deployment #Nom du déploiment de l'application  Node
   namespace: iheb
   labels:
     app: node-app

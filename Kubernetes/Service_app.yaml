@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: node-app-service #Nom du service de l'application Backend Node
+  name: node-app-service #Nom du service de l'application  Node
   namespace: iheb
 spec:
   selector:
