@@ -5,34 +5,34 @@
   tasks:
 
   #Delete Old Deployment and Service of back
-    - name: Delete old Deployment of Backend NodeJS from K8S
-      command: kubectl delete -n skander-pfe deployment back-node-app-deployment
-      become: yes
-      become_user: ubuntu 
-
-    - name: Delete old Service of Backend Nodejs On K8S
-      command: kubectl delete -n skander-pfe service back-node-app-service
-      become: yes
-      become_user: ubuntu 
-
-    - name: Delete Secret from K8S
-      command: kubectl delete -n skander-pfe secret mongodb-secret
-      become: yes
-      become_user: ubuntu 
-      
+#    - name: Delete old Deployment of Backend NodeJS from K8S
+#      command: kubectl delete -n iheb deployment back-node-app-deployment
+#      become: yes
+#      become_user: ubuntu
+#
+#    - name: Delete old Service of Backend Nodejs On K8S
+#      command: kubectl delete -n iheb service back-node-app-service
+#      become: yes
+#      become_user: ubuntu
+#
+#    - name: Delete Secret from K8S
+#      command: kubectl delete -n iheb secret mongodb-secret
+#      become: yes
+#      become_user: ubuntu
+#
 #Create new Deployment and Service for back
 
-    - name: Apply Secret On K8S
-      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/mongo-secert.yaml
-      become: yes
-      become_user: ubuntu
+#    - name: Apply Secret On K8S
+#      command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/mongo-secert.yaml
+#      become: yes
+#      become_user: ubuntu
 
-    - name: Create new Deployment for Backeend Node On K8S
+    - name: Create new Deployment for Project Node On K8S
       command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Deployment_Back.yaml
       become: yes
       become_user: ubuntu
 
-    - name: Create new Service for Backeend Node On K8S
+    - name: Create new Service for Project Node On K8S
       command: kubectl apply -f /home/ubuntu/kubernetes-app/Backend/Service_Back.yaml
       become: yes
       become_user: ubuntu
