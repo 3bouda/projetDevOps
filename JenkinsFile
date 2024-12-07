@@ -56,10 +56,16 @@ pipeline {
             steps {
             sshagent(['k8s']) {
 
+                echo "Delete old files";
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Deployment_app.yaml"
+                    sh "ssh -o StrictHostKeyChecking=no ubuntu@192.168.61.130 rm /home/ubuntu/kubernetes-app/Service_app.yaml"
+                echo "Add new files";
                     sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Deployment_app.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
                     sh "scp -o StrictHostKeyChecking=no ./Kubernetes/Service_app.yaml ubuntu@192.168.61.130:/home/ubuntu/kubernetes-app"
 
             script {
+                    sh "ssh ubuntu@192.168.61.130 kubectl delete -n iheb deployment node-app-deployment"
+                    sh "ssh ubuntu@192.168.61.130 kubectl delete -n iheb service node-app-service"
                     sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Deployment_app.yaml"
                     sh "ssh ubuntu@192.168.61.130 kubectl create -f /home/ubuntu/kubernetes-app/Service_app.yaml"
                     }
